@@ -1,0 +1,76 @@
+# Wall properties
+variable youngmodP      equal 5e6
+variable poissP         equal 0.4
+
+# Particle properties naming:
+#    PP  = Particle-Particle
+#    PW  = Particle-Wall (cylindrical hull of the GranuDrum)
+#    PSW = Particle-Sidewall (circular sides of the GranuDrum)
+
+variable fricPP         equal {{ fric_pp }}          # Optimise as `sliding`
+variable fricPW         equal 0.720222               # Optimise
+variable fricPSW        equal 0.720222               # Optimise
+variable fric           equal 0.720222               # Dummy value, Wall-Sidewall
+
+variable fricRollPP     equal 0.043350               # Optimise as `rolling`
+variable fricRollPW     equal 0.043350               # Optimise
+variable fricRollPSW    equal 0.043350               # Optimise
+variable fricRoll       equal 0.043350               # Dummy value, Wall-Sidewall
+
+variable corPP          equal 0.664838               # Optimise
+variable corPW          equal 0.664838               # Optimise
+variable corPSW         equal 0.664838               # Optimise
+variable cor            equal 0.664838               # Dummy value, Wall-Sidewall
+
+variable cohPP          equal 0                      # Optimise as `cohesion`
+variable cohPW          equal 0                      # Optimise
+variable cohPSW         equal 0                      # Optimise
+variable coh            equal 0                      # Dummy value, Wall-Sidewall
+
+variable dens           equal 1580.0
+
+# PSD added here by cg_optimiser.py
+# From file fractions_raw.csv
+# Linear coarse-graining factor = 1.0
+variable r0 equal 0.0005062582509797333
+variable p0 equal 0.0621301775147929
+fix pts0 all particletemplate/sphere 1299709 atom_type 1 density constant ${dens} volume_limit 1.0e-14 radius constant ${r0}
+
+variable r1 equal 0.0005177802426380415
+variable p1 equal 0.1028928336620644
+fix pts1 all particletemplate/sphere 1299721 atom_type 1 density constant ${dens} volume_limit 1.0e-14 radius constant ${r1}
+
+variable r2 equal 0.0005293022342963495
+variable p2 equal 0.1337935568704799
+fix pts2 all particletemplate/sphere 1299743 atom_type 1 density constant ${dens} volume_limit 1.0e-14 radius constant ${r2}
+
+variable r3 equal 0.0005408242259546577
+variable p3 equal 0.1397107166337935
+fix pts3 all particletemplate/sphere 1299763 atom_type 1 density constant ${dens} volume_limit 1.0e-14 radius constant ${r3}
+
+variable r4 equal 0.0005523462176129657
+variable p4 equal 0.1337935568704799
+fix pts4 all particletemplate/sphere 1299791 atom_type 1 density constant ${dens} volume_limit 1.0e-14 radius constant ${r4}
+
+variable r5 equal 0.0005638682092712741
+variable p5 equal 0.1216305062458908
+fix pts5 all particletemplate/sphere 1299811 atom_type 1 density constant ${dens} volume_limit 1.0e-14 radius constant ${r5}
+
+variable r6 equal 0.0005753902009295821
+variable p6 equal 0.1045364891518737
+fix pts6 all particletemplate/sphere 1299817 atom_type 1 density constant ${dens} volume_limit 1.0e-14 radius constant ${r6}
+
+variable r7 equal 0.0005869121925878904
+variable p7 equal 0.0798816568047337
+fix pts7 all particletemplate/sphere 1299821 atom_type 1 density constant ${dens} volume_limit 1.0e-14 radius constant ${r7}
+
+variable r8 equal 0.0005984341842461983
+variable p8 equal 0.0723208415516107
+fix pts8 all particletemplate/sphere 1299827 atom_type 1 density constant ${dens} volume_limit 1.0e-14 radius constant ${r8}
+
+variable r9 equal 0.0006099561759045066
+variable p9 equal 0.04930966469428
+fix pts9 all particletemplate/sphere 1299833 atom_type 1 density constant ${dens} volume_limit 1.0e-14 radius constant ${r9}
+
+fix pdd all particledistribution/discrete/numberbased 1299841 10 pts0 ${p0} pts1 ${p1} pts2 ${p2} pts3 ${p3} pts4 ${p4} pts5 ${p5} pts6 ${p6} pts7 ${p7} pts8 ${p8} pts9 ${p9}
+

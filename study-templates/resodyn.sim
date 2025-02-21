@@ -1,0 +1,148 @@
+# EvoPhase Resodyne Simulation Base
+# Author: The EvoPhase Crew
+# Date:   Apr 13 2023
+# Description:
+# This script launches a liggghts simulation of a vibrating mixer
+# Frequency is gonna be based on "vibrationPeriod"
+# Amplitude based on "amp"
+
+# For Multiprocessing: defining the layout for the processors
+# processors  * * 1
+
+## Simulation Parameter Definition:
+variable timestep       equal 1e-5   #(default 1e-5)
+variable dumpstep       equal 1000    # Save VTK rate (default 2000)
+variable N1             equal {{ num_particles }}    # Fill 0.6 (deafult 96685)
+
+
+variable vibrationPeriod equal 1/62.44
+variable amp equal {{ amp }}    # Deafult = 0.002549432237860155 (Acceleration 40.0 G)
+
+
+# Mesh dimensions
+variable meshdiameter equal 0.06
+variable meshheight equal 0.08
+
+
+# Main Code. Setup of the Simulation
+atom_style 	granular
+atom_modify	map array
+
+boundary	    f f f
+newton 		    off	        
+communicate     single vel yes
+units 		    si
+
+region		    domain block &
+    $(-v_meshdiameter/2 -0.001) $(v_meshdiameter/2 +0.001) &
+    $(-v_meshdiameter/2 -0.001) $(v_meshdiameter/2 +0.001) &
+    $(-0.02 -v_amp) $(v_meshheight +0.001 + v_amp) units box #creates a region
+create_box      2 domain
+#read_restart   base.start
+
+
+# Include particle properties and PSD
+include particles.sim
+
+# Creates the neighbor-list (due to only contact models this is very short)
+neighbor	    $(v_r1/2) bin
+neigh_modify	delay 0
+
+
+# Particle / wall contact properties
+fix  m1 all property/global youngsModulus peratomtype ${youngmodP} ${youngmodP}
+fix  m2 all property/global poissonsRatio peratomtype ${poissP} ${poissP}
+
+fix  m3 all property/global coefficientRestitution peratomtypepair 2 &
+    ${corPP}      ${corPW}      &
+    ${corPW}      ${corPW}
+
+fix  m4 all property/global coefficientFriction peratomtypepair 2 &
+    ${fricPP}     ${fricPW}     &
+    ${fricPW}     ${fricPW}
+
+
+fix  m6 all property/global cohesionEnergyDensity peratomtypepair 2 &
+    ${cohPP}      ${cohPW}      &
+    ${cohPW}      ${cohPW}
+
+fix  m7 all property/global coefficientRollingFriction peratomtypepair 2 &
+    ${fricRollPP} ${fricRollPW} &
+    ${fricRollPW} ${fricRollPW}
+
+fix  m5 all property/global k_finnie peratomtypepair 2  1.0 1.0 1.0 1.0
+
+
+# New pair style
+pair_style  gran model hertz tangential history cohesion sjkr rolling_friction cdt
+pair_coeff  * *
+
+
+# Timestep size
+timestep    ${timestep}
+
+
+# Set gravity as a constant force
+fix  gravi all gravity 9.81 vector 0.0 0.0 -1.0
+
+
+# The Drum/faces
+fix  cad all mesh/surface/stress file cylinder.stl type 2 scale 1e-3  wear finnie
+
+
+# Wall contact models
+fix  granwalls all wall/gran model hertz tangential history rolling_friction cdt mesh n_meshes 1 meshes cad
+
+
+# Particle insertion
+region  bc cylinder z 0.0 0.0 $(v_meshdiameter/2) 0. ${meshheight} units box
+
+variable insert_every equal 0.1/${timestep}
+
+fix ins all insert/pack     seed 15485867                   &
+                            distributiontemplate pdd        &
+                            maxattempt 200                  &
+                            vel constant 0. 0. -0.5         &
+                            insert_every ${insert_every}    &
+                            overlapcheck yes                &
+                            all_in yes                      &
+                            particles_in_region ${N1} region bc
+
+
+# Integration scheme
+fix    integr all nve/sphere
+
+
+# Output settings, include total thermal energy
+thermo          1000
+thermo_style    custom step atoms ke vol time
+thermo_modify   lost ignore norm no
+
+modify_timing on
+
+
+# Save particle positions
+dump dump_particles all custom/vtk ${dumpstep} post/particles_*.vtk id type x y z vx vy vz fx fy fz radius mass
+
+dump dump_geometry all mesh/vtk ${dumpstep} post/mesh_*.vtk cad stress
+
+
+# Fill vibrofluidised bed
+variable runsteps equal 2/${timestep}
+run ${runsteps}
+unfix ins
+
+
+# Start vibrating cylinder
+fix move all move/mesh mesh cad wiggle amplitude 0. 0. ${amp} period ${vibrationPeriod}
+
+
+# Run vibrofluidised bed
+variable runsteps equal 10/${timestep}
+run ${runsteps}
+
+unfix move
+
+# Settling phase after vibration
+variable settlingsteps equal 1/${timestep}  
+run ${settlingsteps}
