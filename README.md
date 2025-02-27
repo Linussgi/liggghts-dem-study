@@ -2,7 +2,7 @@
 The following workflow was created to automate generation and analysis of an N-dimensional parameter sweep over a LIGGGHTS MCC particle simulation. This is to invetsigate the effects of said parameters on particle mixing rate and mixing quality within a cylindrical random acoustic mixer (RAM). 
 
 ### Simulation files setup 
-The setup of the parameter space is handelled by the files within the `study-setup` directory.
+The setup of the parameter space is handled by the files within the `study-setup` directory.
 
 The user selects a parameter space of N dimensions to investigate. Files that contain the simulation data (such as LIGGGHTS `.sim` files and geometry files) should be stored in `study-templates`. The workflow will create a folder for each study within the parameter space. For example, if the user wishes to invetsigate a 3D parameter space of 4 by 2 by 5, the workflow will create 40 study unique folders, each folder containing simulation files with a different combination of parameters.
 
@@ -46,8 +46,7 @@ The Parameter defines each paramater, its name, the file it is located in and it
 
 - `name: str`: The parameter name as it appears in the template files (this is determined by the user in their simulation template files)
 - `filename: str`: The template file where this parameter is used
-- `bounds: List[float]`: A list of [min, max] values for the parameter
-- `samples: int`: Number of evenly spaced samples to generate between bounds
+- `values`: A list of values the parameter can take
 
 The Study class manages the parameter sweep and file generation:
 
