@@ -9,14 +9,30 @@ from jinja2 import Environment, FileSystemLoader, Template
 
 
 class Parameter:
-    def __init__(self, name: str, filename: str, bounds: List[float], samples: int):
+    """
+    A class to store the attributes of a parameter
+
+    Attributes:
+        name (str): This name should be the same as the parameter's placeholder name in within the template files. 
+        filename (str): This is the name of the template file that this parameter appears in.
+        values: (List[float]): The values this parameter can take withiin the parameter space.
+    """
+    def __init__(self, name: str, filename: str, values: List[float]):
         self.name = name
         self.filename = filename
-        self.samples = samples
-        self.values = np.linspace(bounds[0], bounds[1], samples, endpoint=True)
+        self.values = values
+        self.samples = len(values)
 
 
 class Study:
+    """
+    A class to define and generate a N-dimensional parameter case study specified by the user.
+
+    Attributes:
+        parameters (List[Parameter]): A list of Parameter objects representing the parameters the user wishes to vary.
+        templates_location (str): The directory containing template files each simulation requires.
+        dynamic_files (List[str]): A list of filename within the template location that contain one or more of the parameters being varied.
+    """
     def __init__(self, parameters: List[Parameter], templates_location: str):
         self.parameters = parameters
         self.templates_location = templates_location
@@ -30,11 +46,22 @@ class Study:
 
     
     def get_jinja_templates(self, templates_dir: str) -> List[Tuple[Template, List[str]]]:
+        """
+        Loads Jinja2 templates and associates them with their corresponding parameters.
+
+        Args:
+            templates_dir (str): The directory containing the template files.
+
+        Returns:
+            List[Tuple[Template, List[str]]]: A list of tuples where each tuple contains:
+                - A Jinja2 Template object.
+                - A list of parameter names used in the template.
+        """
         env = Environment(loader=FileSystemLoader(templates_dir))
         
         template_data = []
         for file in self.dynamic_files:
-            template = env.get_template(file)  
+            template = env.get_template(file)
 
             param_names = []
             for param in self.parameters:
@@ -46,7 +73,13 @@ class Study:
         return template_data
     
 
-    def generate_phase_space(self) -> List[List[float]]:
+    def generate_phase_space(self) -> np.ndarray:
+        """
+        Generates all combinations of parameter values.
+
+        Returns:
+            np.ndarray: An array where each row represents a unique combination of parameter values within the parameter space.
+        """
         parameter_values = [param.values for param in self.parameters]
         phase_space_combinations = list(itertools.product(*parameter_values))
         
@@ -54,10 +87,21 @@ class Study:
     
 
     def get_param_names(self) -> List[str]:
+        """
+        Returns a list of the names of all parameters beginf studied.
+        """
         return [param.name for param in self.parameters]
         
 
     def generate_studies(self, output_dir: str) -> None:
+        """
+        Generates directories for each combination of parameters and renders templates. Within each directory, all files within `study-templates` are copied in.
+            - Files named in `self.dyanmic_files` will have their templates rendered with a unique parameter combinarion when copied in.
+            - Files named in `static_files` will be copied in as they are with no modification.
+
+        Args:
+            output_dir (str): The directory where all generated studies will be saved.
+        """
         param_combinations = self.generate_phase_space()
         param_names = self.get_param_names()
 
@@ -83,14 +127,16 @@ class Study:
             all_files = os.listdir(self.templates_location)
             static_files = [file for file in all_files if file not in self.dynamic_files]
 
+            # Check for bash script to run workflow 
             if "run.sh" not in all_files:
                 warnings.warn(f"No `run.sh` file detected in {self.templates_location}. It is possible the run file has a different name, or that it is not present.")
 
+            # Check that geometry was present in template files
             for file in all_files:
                 if file.endswith(".stl"):
                     break
             else:
-                warnings.warn("No `.stl` file detected") 
+                warnings.warn(f"No `.stl` file detected in {self.templates_location}") 
             
             for file in static_files:
                 source_path = os.path.join(self.templates_location, file)

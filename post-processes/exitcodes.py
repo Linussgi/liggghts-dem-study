@@ -7,7 +7,8 @@ DL = 75 # Output delimiter length (for visual ease of reading output)
 
 base_dir = "../sweep_output"
 output_dir = "../lacey-files" # csv output
-study_format = "fric_*_cor_*" 
+
+study_format = "num_particles: *, fric_pp: *, amp: *" 
 
 os.makedirs(output_dir, exist_ok=True)
 

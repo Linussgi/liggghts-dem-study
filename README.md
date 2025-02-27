@@ -1,7 +1,9 @@
 ## LIGGGHTS N-Dimensional Parameter Sweep
 The following workflow was created to automate generation and analysis of an N-dimensional parameter sweep over a LIGGGHTS MCC particle simulation. This is to invetsigate the effects of said parameters on particle mixing rate and mixing quality within a cylindrical random acoustic mixer (RAM). 
 
-### Simulation files setup
+### Simulation files setup 
+The setup of the parameter space is handelled by the files within the `study-setup` directory.
+
 The user selects a parameter space of N dimensions to investigate. Files that contain the simulation data (such as LIGGGHTS `.sim` files and geometry files) should be stored in `study-templates`. The workflow will create a folder for each study within the parameter space. For example, if the user wishes to invetsigate a 3D parameter space of 4 by 2 by 5, the workflow will create 40 study unique folders, each folder containing simulation files with a different combination of parameters.
 
 
@@ -16,21 +18,27 @@ The user selects a parameter space of N dimensions to investigate. Files that co
 ```python
 from parameter_sweep import Parameter, Study
 import os
+import numpy as np
 
-# Defintion of key paths
+# Define key paths
 script_dir = os.path.dirname(os.path.abspath(__file__))
 templates_dir = os.path.join(script_dir, "..", "study-templates")
 output_dir = os.path.join(script_dir, "..", "sweep-output")
 
-# Creation of `Parameter` objects 
-n_particles = Parameter("num_particles", "resodyn.sim", [30000, 150000], 5)
-friction = Parameter("fric_pp", "particles.sim", [0, 2], 5)
-amplitude = Parameter("amp", "resodyn.sim", [0, 0.01], 5)
+# Create values for parameters contained within simulation files
+particle_values = np.linspace(30000, 150000, 5, endpoint=True)
+friction_values = np.linspace(0, 2, 5, endpoint=True)
+amplitude_values = np.linspace(0, 0.01, 5, endpoint=True)
 
-# Creation of Study object
+# Create Parameter objects
+n_particles = Parameter("num_particles", "resodyn.sim", particle_values)
+friction = Parameter("fric_pp", "particles.sim", friction_values)
+amplitude = Parameter("amp", "resodyn.sim", amplitude_values)
+
+# Create Study object
 my_study = Study([n_particles, friction, amplitude], templates_dir)
 
-# Generation of study folders
+# Generate study folders and files
 my_study.generate_studies(output_dir)
 ```
 

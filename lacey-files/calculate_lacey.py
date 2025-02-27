@@ -54,6 +54,9 @@ def parallel_run(simulation_state,
     return [time, x_lacey, y_lacey, z_lacey, r_lacey, 
                 in_mesh_particles, out_of_mesh_particles, dropped_particles]
 
+# Example name
+study_format = "num_particles: *, fric_pp: *, amp: *" 
+
 def main():
     # Mesh parameters
     cylinder_prefix = "mesh_"
@@ -86,7 +89,7 @@ def main():
         print("No exit code CSV file found. Proceeding as normal")
 
     # study directories 
-    glob_study = os.path.join("../sweep_output", "fric_*_cor_*")
+    glob_study = os.path.join("../sweep_output", study_format)
     all_studies = natsorted([f for f in glob.glob(glob_study)])
     
     # Filter out and print excluded studies

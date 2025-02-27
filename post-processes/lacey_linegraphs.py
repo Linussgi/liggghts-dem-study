@@ -32,7 +32,7 @@ def filter_df(df: pd.DataFrame, header_string: str) -> pd.DataFrame:
 
 df = pd.read_csv("../lacey-files/lacey_results.csv")
 
-header_string = "fric_2.000_cor_0.240" 
+header_string = "num_particles: 30000, fric_pp: 0, amp: 0" 
 filtered_df = filter_df(df, header_string)
 
 fig, ax = plt.subplots(2, 1, figsize=[12, 12]) 
