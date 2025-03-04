@@ -1,4 +1,3 @@
-from typing import List, Tuple
 import warnings
 
 import numpy as np
@@ -10,14 +9,14 @@ from jinja2 import Environment, FileSystemLoader, Template
 
 class Parameter:
     """
-    A class to store the attributes of a parameter
+    A class to store the attributes of a parameter.
 
     Attributes:
         name (str): This name should be the same as the parameter's placeholder name in within the template files. 
         filename (str): This is the name of the template file that this parameter appears in.
         values: (List[float]): The values this parameter can take withiin the parameter space.
     """
-    def __init__(self, name: str, filename: str, values: List[float]):
+    def __init__(self, name: str, filename: str, values: list[float]):
         self.name = name
         self.filename = filename
         self.values = values
@@ -33,7 +32,7 @@ class Study:
         templates_location (str): The directory containing template files each simulation requires.
         dynamic_files (List[str]): A list of filename within the template location that contain one or more of the parameters being varied.
     """
-    def __init__(self, parameters: List[Parameter], templates_location: str):
+    def __init__(self, parameters: list[Parameter], templates_location: str):
         self.parameters = parameters
         self.templates_location = templates_location
 
@@ -45,7 +44,7 @@ class Study:
         self.dynamic_files = dynamic_files
 
     
-    def get_jinja_templates(self, templates_dir: str) -> List[Tuple[Template, List[str]]]:
+    def get_jinja_templates(self, templates_dir: str) -> list[tuple[Template, list[str]]]:
         """
         Loads Jinja2 templates and associates them with their corresponding parameters.
 
@@ -86,18 +85,18 @@ class Study:
         return np.array(phase_space_combinations)
     
 
-    def get_param_names(self) -> List[str]:
+    def get_param_names(self) -> list[str]:
         """
-        Returns a list of the names of all parameters beginf studied.
+        Returns a list of the names of all parameters being studied.
         """
         return [param.name for param in self.parameters]
         
 
     def generate_studies(self, output_dir: str) -> None:
         """
-        Generates directories for each combination of parameters and renders templates. Within each directory, all files within `study-templates` are copied in.
-            - Files named in `self.dyanmic_files` will have their templates rendered with a unique parameter combinarion when copied in.
-            - Files named in `static_files` will be copied in as they are with no modification.
+        Generates a study directory for each combination of parameters . Within each directory, all files within `study-templates` are copied in.
+            - Files named in `self.dyanmic_files` will have their templates rendered with a unique parameter combination when copied in.
+            - Files named in the `static_files` local variable will be copied in as they are with no modification.
 
         Args:
             output_dir (str): The directory where all generated studies will be saved.
@@ -105,8 +104,9 @@ class Study:
         param_combinations = self.generate_phase_space()
         param_names = self.get_param_names()
 
+        iteration = 0
         for combination in param_combinations:
-            study_name = ", ".join([f"{name}: {value}" for name, value in zip(param_names, combination)])
+            study_name = "_".join([f"{name}={value}" for name, value in zip(param_names, combination)])
 
             study_path = os.path.join(output_dir, study_name)
 
@@ -142,4 +142,14 @@ class Study:
                 source_path = os.path.join(self.templates_location, file)
                 destination_path = os.path.join(study_path, file)
 
-                shutil.copy(source_path, destination_path)  
+                shutil.copy(source_path, destination_path)
+
+            iteration += 1
+
+        print(f"Created {iteration} studies in {output_dir}")  
+
+
+    def get_study_format(self):
+        param_names = self.get_param_names()
+
+        return "_".join([f"{name}=*" for name in param_names])

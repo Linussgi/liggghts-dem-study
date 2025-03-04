@@ -16,3 +16,5 @@ amplitude = Parameter("amp", "resodyn.sim", amplitude_values)
 
 my_study = Study([n_particles, friction, amplitude], templates_dir)
 my_study.generate_studies(output_dir)
+
+print(f"Study name format is: {my_study.get_study_format()}")
