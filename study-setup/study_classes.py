@@ -5,6 +5,8 @@ import os
 import itertools
 import shutil
 from jinja2 import Environment, FileSystemLoader, Template
+from natsort import natsorted
+import glob
 
 
 class Parameter:
@@ -106,7 +108,7 @@ class Study:
 
         iteration = 0
         for combination in param_combinations:
-            study_name = "_".join([f"{name}={value}" for name, value in zip(param_names, combination)])
+            study_name = "-".join([f"{name}_{value}" for name, value in zip(param_names, combination)])
 
             study_path = os.path.join(output_dir, study_name)
 
@@ -129,14 +131,14 @@ class Study:
 
             # Check for bash script to run workflow 
             if "run.sh" not in all_files:
-                warnings.warn(f"No `run.sh` file detected in {self.templates_location}. It is possible the run file has a different name, or that it is not present.")
+                warnings.warn(f"No `run.sh` file found in {self.templates_location}. It is possible the run file has a different name, or is not present.")
 
             # Check that geometry was present in template files
             for file in all_files:
                 if file.endswith(".stl"):
                     break
             else:
-                warnings.warn(f"No `.stl` file detected in {self.templates_location}") 
+                warnings.warn(f"No `.stl` file found in {self.templates_location}. It is possible the stl file has a different name, or is not present.") 
             
             for file in static_files:
                 source_path = os.path.join(self.templates_location, file)
@@ -148,8 +150,38 @@ class Study:
 
         print(f"Created {iteration} studies in {output_dir}")  
 
+    
+    def slurm_launch(self, output_dir):
+        """
+        Submits SLURM jobs for each study directory (each simulation) in the output directory.
+
+        Args:
+            output_dir (str): The directory containing study folders.
+
+        Returns:
+            None
+        """
+        study_format = self.get_study_format()
+
+        run_folders = natsorted(glob.glob(os.path.join(output_dir, study_format))) 
+        for index, run_folder in enumerate(run_folders):
+            launch_file = os.path.join(run_folder, "run.sh")
+            cmd = f"sbatch --output={run_folder}/slurm-%j.out {launch_file} {run_folder}"
+
+            run_folder_name = os.path.basename(run_folder)  
+            parent_folder_name = os.path.basename(os.path.dirname(run_folder))  
+            print(f"Submitting job for {parent_folder_name}/{run_folder_name}: Job {index + 1}")
+
+            os.system(cmd)  # Submit job
+
 
     def get_study_format(self):
+        """
+        Generates a format string to match study directories.
+
+        Returns:
+            str: The study format string.
+        """
         param_names = self.get_param_names()
 
-        return "_".join([f"{name}=*" for name in param_names])
+        return "-".join([f"{name}_*" for name in param_names])

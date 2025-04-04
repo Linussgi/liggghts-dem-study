@@ -12,7 +12,7 @@
 ## Simulation Parameter Definition:
 variable timestep       equal 1e-5   #(default 1e-5)
 variable dumpstep       equal 25000    # Save VTK rate (default 2000)
-variable N1             equal {{ num_particles }}    # Fill 0.6 (deafult 96685)
+variable N1             equal {{ numParticles }}    # Fill 0.6 (deafult 96685)
 
 
 variable vibrationPeriod equal 1/62.44

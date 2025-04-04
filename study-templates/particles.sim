@@ -7,7 +7,7 @@ variable poissP         equal 0.4
 #    PW  = Particle-Wall (cylindrical hull of the GranuDrum)
 #    PSW = Particle-Sidewall (circular sides of the GranuDrum)
 
-variable fricPP         equal {{ fric_pp }}          # Optimise as `sliding`
+variable fricPP         equal {{ fricPp }}          # Optimise as `sliding`
 variable fricPW         equal 0.720222               # Optimise
 variable fricPSW        equal 0.720222               # Optimise
 variable fric           equal 0.720222               # Dummy value, Wall-Sidewall
